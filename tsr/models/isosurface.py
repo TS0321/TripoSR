@@ -1,9 +1,12 @@
+import logging
 from typing import Callable, Optional, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torchmcubes import marching_cubes
+
+logger = logging.getLogger(__name__)
 
 
 class IsosurfaceHelper(nn.Module):
@@ -44,8 +47,8 @@ class MarchingCubeHelper(IsosurfaceHelper):
         level = -level.view(self.resolution, self.resolution, self.resolution)
         try:
             v_pos, t_pos_idx = self.mc_func(level.detach(), 0.0)
-        except AttributeError:
-            print("torchmcubes was not compiled with CUDA support, use CPU version instead.")
+        except (AttributeError, RuntimeError):
+            logger.info("torchmcubes: MPS/CUDA未対応のためCPUにフォールバック")
             v_pos, t_pos_idx = self.mc_func(level.detach().cpu(), 0.0)
         v_pos = v_pos[..., [2, 1, 0]]
         v_pos = v_pos / (self.resolution - 1.0)
