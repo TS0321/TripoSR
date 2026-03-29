@@ -4,7 +4,14 @@ from typing import Callable, Optional, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
-from torchmcubes import marching_cubes
+try:
+    from torchmcubes import marching_cubes
+except ImportError:
+    import mcubes
+
+    def marching_cubes(level, threshold):
+        vertices, faces = mcubes.marching_cubes(level.cpu().numpy(), threshold)
+        return torch.from_numpy(vertices).float(), torch.from_numpy(faces.astype(int)).long()
 
 logger = logging.getLogger(__name__)
 
